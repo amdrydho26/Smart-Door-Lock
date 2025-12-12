@@ -57,22 +57,22 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
       <div class="bg-white rounded-lg shadow-md p-6">
         <p class="text-gray-500 text-sm font-medium">Total Log</p>
-        <p class="text-3xl font-bold text-gray-900 mt-2">{{ logStats.totalLogs }}</p>
+        <p class="text-3xl font-bold text-gray-900 mt-2">{{ totalLogsAnimated }}</p>
         <p class="text-xs text-gray-600 mt-2">{{ logStats.todayLogs }} log hari ini</p>
       </div>
       <div class="bg-white rounded-lg shadow-md p-6">
         <p class="text-gray-500 text-sm font-medium">Sukses</p>
-        <p class="text-3xl font-bold text-green-600 mt-2">{{ logStats.successLogs }}</p>
-        <p class="text-xs text-green-600 mt-2">{{ logStats.successPercentage }}%</p>
+        <p class="text-3xl font-bold text-green-600 mt-2">{{ successLogsAnimated }}</p>
+        <p class="text-xs text-green-600 mt-2">{{ successPercentageAnimated }}%</p>
       </div>
       <div class="bg-white rounded-lg shadow-md p-6">
         <p class="text-gray-500 text-sm font-medium">Gagal</p>
-        <p class="text-3xl font-bold text-red-600 mt-2">{{ logStats.failedLogs }}</p>
-        <p class="text-xs text-red-600 mt-2">{{ logStats.failedPercentage }}%</p>
+        <p class="text-3xl font-bold text-red-600 mt-2">{{ failedLogsAnimated }}</p>
+        <p class="text-xs text-red-600 mt-2">{{ failedPercentageAnimated }}%</p>
       </div>
       <div class="bg-white rounded-lg shadow-md p-6">
         <p class="text-gray-500 text-sm font-medium">User Aktif</p>
-        <p class="text-3xl font-bold text-blue-600 mt-2">{{ logStats.activeUsers }}</p>
+        <p class="text-3xl font-bold text-blue-600 mt-2">{{ activeUsersAnimated }}</p>
         <p class="text-xs text-blue-600 mt-2">Minggu ini</p>
       </div>
     </div>
@@ -92,12 +92,7 @@
           <option value="user">User</option>
           <option value="status">Status</option>
         </select>
-        <select v-model="itemsPerPage" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-          <option value="10">10 item</option>
-          <option value="25">25 item</option>
-          <option value="50">50 item</option>
-          <option value="100">100 item</option>
-        </select>
+
       </div>
 
       <!-- Log Table -->
@@ -111,7 +106,6 @@
               <th class="px-6 py-3 text-left font-semibold text-gray-700 text-sm">UID</th>
               <th class="px-6 py-3 text-left font-semibold text-gray-700 text-sm">Status</th>
               <th class="px-6 py-3 text-left font-semibold text-gray-700 text-sm">Pesan</th>
-              <th class="px-6 py-3 text-left font-semibold text-gray-700 text-sm">Metode</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
@@ -136,21 +130,9 @@
                 </span>
               </td>
               <td class="px-6 py-4 text-sm text-gray-600">{{ log.message }}</td>
-              <td class="px-6 py-4">
-                <span :class="[
-                  'px-2 py-1 rounded text-xs font-medium',
-                  log.method === 'PIN'
-                    ? 'bg-blue-100 text-blue-800'
-                    : log.method === 'RFID'
-                    ? 'bg-purple-100 text-purple-800'
-                    : 'bg-gray-100 text-gray-800'
-                ]">
-                  {{ log.method }}
-                </span>
-              </td>
             </tr>
             <tr v-if="filteredLogs.length === 0">
-              <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="6" class="px-6 py-12 text-center text-gray-500">
                 <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
                 </svg>
@@ -200,32 +182,12 @@
       </div>
     </div>
 
-    <!-- Export Section -->
-    <div class="bg-white rounded-lg shadow-md p-6">
-      <h3 class="font-semibold text-gray-900 mb-4">Aksi Lanjutan</h3>
-      <div class="flex flex-col md:flex-row gap-3">
-        <button class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium flex items-center justify-center space-x-2">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586l1.293-1.293a1 1 0 111.414 1.414l-2 2a1 1 0 01-1.414 0l-2-2a1 1 0 010-1.414z" clip-rule="evenodd" />
-          </svg>
-          <span>Export ke CSV</span>
-        </button>
-        <button class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center justify-center space-x-2">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.3A4.5 4.5 0 1113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13H5.5z" />
-          </svg>
-          <span>Export ke PDF</span>
-        </button>
-        <button class="flex-1 px-6 py-3 border-2 border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-medium">
-          Cetak
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useCountUp } from '../../composables/useCountUp'
 
 const filterStartDate = ref('')
 const filterEndDate = ref('')
@@ -246,27 +208,35 @@ const logStats = ref({
   activeUsers: 12,
 })
 
+// animated stats
+const totalLogsAnimated = useCountUp(computed(() => logStats.value.totalLogs), { duration: 900 })
+const successLogsAnimated = useCountUp(computed(() => logStats.value.successLogs), { duration: 900 })
+const failedLogsAnimated = useCountUp(computed(() => logStats.value.failedLogs), { duration: 900 })
+const activeUsersAnimated = useCountUp(computed(() => logStats.value.activeUsers), { duration: 900 })
+const successPercentageAnimated = useCountUp(computed(() => logStats.value.successPercentage), { duration: 900 })
+const failedPercentageAnimated = useCountUp(computed(() => logStats.value.failedPercentage), { duration: 900 })
+
 const allLogs = ref([
-  { time: '12/11/2025 14:35:22', uid: 'user001', userName: 'Budi Santoso', status: 'sukses', message: 'Pintu dibuka dengan PIN', method: 'PIN' },
-  { time: '12/11/2025 14:28:15', uid: 'user002', userName: 'Siti Nurhaliza', status: 'sukses', message: 'Pintu dibuka dengan RFID', method: 'RFID' },
-  { time: '12/11/2025 14:15:47', uid: 'user003', userName: 'Rinto Harahap', status: 'gagal', message: 'PIN salah (Percobaan 3)', method: 'PIN' },
-  { time: '12/11/2025 14:05:33', uid: 'user001', userName: 'Budi Santoso', status: 'sukses', message: 'Pintu dibuka dengan PIN', method: 'PIN' },
-  { time: '12/11/2025 13:52:09', uid: 'user004', userName: 'Dewi Lestari', status: 'sukses', message: 'Pintu dibuka dengan RFID', method: 'RFID' },
-  { time: '12/11/2025 13:40:22', uid: 'user005', userName: 'Ahmad Rizaldi', status: 'gagal', message: 'UID tidak terdaftar', method: 'RFID' },
-  { time: '12/11/2025 13:25:15', uid: 'user006', userName: 'Ratna Wijaya', status: 'sukses', message: 'Pintu dibuka dengan PIN', method: 'PIN' },
-  { time: '12/11/2025 13:10:47', uid: 'user002', userName: 'Siti Nurhaliza', status: 'sukses', message: 'Pintu dibuka dengan RFID', method: 'RFID' },
-  { time: '12/10/2025 16:45:33', uid: 'user001', userName: 'Budi Santoso', status: 'sukses', message: 'Pintu dibuka dengan PIN', method: 'PIN' },
-  { time: '12/10/2025 16:20:09', uid: 'user003', userName: 'Rinto Harahap', status: 'gagal', message: 'User tidak aktif', method: 'PIN' },
-  { time: '12/10/2025 16:05:22', uid: 'user004', userName: 'Dewi Lestari', status: 'sukses', message: 'Pintu dibuka dengan RFID', method: 'RFID' },
-  { time: '12/10/2025 15:45:15', uid: 'user005', userName: 'Ahmad Rizaldi', status: 'sukses', message: 'Pintu dibuka dengan RFID', method: 'RFID' },
-  { time: '12/10/2025 15:30:47', uid: 'user006', userName: 'Ratna Wijaya', status: 'gagal', message: 'PIN salah (Percobaan 1)', method: 'PIN' },
-  { time: '12/10/2025 15:15:33', uid: 'user002', userName: 'Siti Nurhaliza', status: 'sukses', message: 'Pintu dibuka dengan PIN', method: 'PIN' },
-  { time: '12/10/2025 15:00:09', uid: 'user001', userName: 'Budi Santoso', status: 'sukses', message: 'Pintu dibuka dengan RFID', method: 'RFID' },
-  { time: '12/09/2025 14:45:22', uid: 'user003', userName: 'Rinto Harahap', status: 'sukses', message: 'Pintu dibuka dengan PIN', method: 'PIN' },
-  { time: '12/09/2025 14:30:15', uid: 'user004', userName: 'Dewi Lestari', status: 'sukses', message: 'Pintu dibuka dengan RFID', method: 'RFID' },
-  { time: '12/09/2025 14:15:47', uid: 'user005', userName: 'Ahmad Rizaldi', status: 'gagal', message: 'UID tidak terdaftar', method: 'PIN' },
-  { time: '12/09/2025 14:00:33', uid: 'user006', userName: 'Ratna Wijaya', status: 'sukses', message: 'Pintu dibuka dengan PIN', method: 'PIN' },
-  { time: '12/09/2025 13:45:09', uid: 'user002', userName: 'Siti Nurhaliza', status: 'sukses', message: 'Pintu dibuka dengan RFID', method: 'RFID' },
+  { time: '12/11/2025 14:35:22', uid: 'user001', userName: 'Budi Santoso', status: 'sukses', message: 'Pintu dibuka dengan PIN' },
+  { time: '12/11/2025 14:28:15', uid: 'user002', userName: 'Siti Nurhaliza', status: 'sukses', message: 'Pintu dibuka dengan RFID' },
+  { time: '12/11/2025 14:15:47', uid: 'user003', userName: 'Rinto Harahap', status: 'gagal', message: 'PIN salah (Percobaan 3)' },
+  { time: '12/11/2025 14:05:33', uid: 'user001', userName: 'Budi Santoso', status: 'sukses', message: 'Pintu dibuka dengan PIN' },
+  { time: '12/11/2025 13:52:09', uid: 'user004', userName: 'Dewi Lestari', status: 'sukses', message: 'Pintu dibuka dengan RFID' },
+  { time: '12/11/2025 13:40:22', uid: 'user005', userName: 'Ahmad Rizaldi', status: 'gagal', message: 'UID tidak terdaftar' },
+  { time: '12/11/2025 13:25:15', uid: 'user006', userName: 'Ratna Wijaya', status: 'sukses', message: 'Pintu dibuka dengan PIN' },
+  { time: '12/11/2025 13:10:47', uid: 'user002', userName: 'Siti Nurhaliza', status: 'sukses', message: 'Pintu dibuka dengan RFID' },
+  { time: '12/10/2025 16:45:33', uid: 'user001', userName: 'Budi Santoso', status: 'sukses', message: 'Pintu dibuka dengan PIN' },
+  { time: '12/10/2025 16:20:09', uid: 'user003', userName: 'Rinto Harahap', status: 'gagal', message: 'User tidak aktif' },
+  { time: '12/10/2025 16:05:22', uid: 'user004', userName: 'Dewi Lestari', status: 'sukses', message: 'Pintu dibuka dengan RFID' },
+  { time: '12/10/2025 15:45:15', uid: 'user005', userName: 'Ahmad Rizaldi', status: 'sukses', message: 'Pintu dibuka dengan RFID' },
+  { time: '12/10/2025 15:30:47', uid: 'user006', userName: 'Ratna Wijaya', status: 'gagal', message: 'PIN salah (Percobaan 1)' },
+  { time: '12/10/2025 15:15:33', uid: 'user002', userName: 'Siti Nurhaliza', status: 'sukses', message: 'Pintu dibuka dengan PIN' },
+  { time: '12/10/2025 15:00:09', uid: 'user001', userName: 'Budi Santoso', status: 'sukses', message: 'Pintu dibuka dengan RFID' },
+  { time: '12/09/2025 14:45:22', uid: 'user003', userName: 'Rinto Harahap', status: 'sukses', message: 'Pintu dibuka dengan PIN' },
+  { time: '12/09/2025 14:30:15', uid: 'user004', userName: 'Dewi Lestari', status: 'sukses', message: 'Pintu dibuka dengan RFID' },
+  { time: '12/09/2025 14:15:47', uid: 'user005', userName: 'Ahmad Rizaldi', status: 'gagal', message: 'UID tidak terdaftar' },
+  { time: '12/09/2025 14:00:33', uid: 'user006', userName: 'Ratna Wijaya', status: 'sukses', message: 'Pintu dibuka dengan PIN' },
+  { time: '12/09/2025 13:45:09', uid: 'user002', userName: 'Siti Nurhaliza', status: 'sukses', message: 'Pintu dibuka dengan RFID' },
 ])
 
 const resetLogFilters = () => {
@@ -279,8 +249,65 @@ const resetLogFilters = () => {
   currentPage.value = 1
 }
 
+// Helper: parse log time string 'dd/mm/yyyy hh:mm:ss' to Date
+const parseLogTime = (timeStr) => {
+  // Supports formats: 'dd/mm/yyyy hh:mm:ss' and 'yyyy-mm-dd hh:mm:ss' and ISO
+  const [datePart, timePart] = timeStr.split(' ')
+  if (!datePart) return new Date(timeStr)
+  let year, month, day
+  if (datePart.includes('/')) {
+    // dd/mm/yyyy
+    [day, month, year] = datePart.split('/').map(Number)
+  } else if (datePart.includes('-')) {
+    // yyyy-mm-dd
+    [year, month, day] = datePart.split('-').map(Number)
+  } else {
+    return new Date(timeStr)
+  }
+  const [hour = 0, minute = 0, second = 0] = (timePart || '').split(':').map(Number)
+  return new Date(year, month - 1, day, hour || 0, minute || 0, second || 0)
+}
+
+// Helper: parse input date 'YYYY-MM-DD' to start/end Date objects
+const parseInputDateStart = (dateStr) => {
+  if (!dateStr) return null
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day, 0, 0, 0)
+}
+const parseInputDateEnd = (dateStr) => {
+  if (!dateStr) return null
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day, 23, 59, 59, 999)
+}
+
+// Strip time, return a date-only (midnight) object for safer comparisons
+const dateOnly = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
+
 const filteredLogs = computed(() => {
   let result = [...allLogs.value]
+
+  // Date range filter
+  let startDate = parseInputDateStart(filterStartDate.value)
+  let endDate = parseInputDateEnd(filterEndDate.value)
+  // Handle reversed dates by swapping
+  if (startDate && endDate && startDate > endDate) {
+    const tmp = startDate
+    startDate = endDate
+    endDate = tmp
+  }
+
+  if (startDate || endDate) {
+    const startOnly = startDate ? dateOnly(startDate) : null
+    const endOnly = endDate ? dateOnly(endDate) : null
+    result = result.filter(log => {
+      const logDate = parseLogTime(log.time)
+      const logOnly = dateOnly(logDate)
+      if (startOnly && endOnly) return logOnly >= startOnly && logOnly <= endOnly
+      if (startOnly) return logOnly >= startOnly
+      if (endOnly) return logOnly <= endOnly
+      return true
+    })
+  }
 
   if (filterUserId.value) {
     result = result.filter(log =>
@@ -298,10 +325,11 @@ const filteredLogs = computed(() => {
     result = result.filter(log => log.message.toLowerCase().includes(query))
   }
 
+  // Sorting with parseLogTime
   if (sortLogBy.value === 'newest') {
-    result.sort((a, b) => new Date(b.time) - new Date(a.time))
+    result.sort((a, b) => parseLogTime(b.time) - parseLogTime(a.time))
   } else if (sortLogBy.value === 'oldest') {
-    result.sort((a, b) => new Date(a.time) - new Date(b.time))
+    result.sort((a, b) => parseLogTime(a.time) - parseLogTime(b.time))
   } else if (sortLogBy.value === 'user') {
     result.sort((a, b) => a.userName.localeCompare(b.userName))
   } else if (sortLogBy.value === 'status') {
@@ -309,6 +337,11 @@ const filteredLogs = computed(() => {
   }
 
   return result
+})
+
+// Reset to page 1 when filters change
+watch([filterStartDate, filterEndDate, filterUserId, filterLogStatus, searchLog, sortLogBy, itemsPerPage], () => {
+  currentPage.value = 1
 })
 
 const totalPages = computed(() => {

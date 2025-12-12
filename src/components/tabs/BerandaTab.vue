@@ -7,7 +7,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-gray-500 text-sm font-medium">Total User</p>
-            <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.totalUsers }}</p>
+            <p class="text-3xl font-bold text-gray-900 mt-2">{{ totalUsersAnimated }}</p>
             <p class="text-xs text-green-600 mt-2">↑ 2 user baru minggu ini</p>
           </div>
           <div class="bg-blue-100 p-4 rounded-lg">
@@ -23,8 +23,8 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-gray-500 text-sm font-medium">Akses Sukses</p>
-            <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.successAccess }}</p>
-            <p class="text-xs text-green-600 mt-2">{{ stats.successPercentage }}% dari total</p>
+            <p class="text-3xl font-bold text-gray-900 mt-2">{{ successAccessAnimated }}</p>
+            <p class="text-xs text-green-600 mt-2">{{ successPercentageAnimated }}% dari total</p>
           </div>
           <div class="bg-green-100 p-4 rounded-lg">
             <svg class="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
@@ -39,7 +39,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-gray-500 text-sm font-medium">Akses Gagal</p>
-            <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.failedAccess }}</p>
+            <p class="text-3xl font-bold text-gray-900 mt-2">{{ failedAccessAnimated }}</p>
             <p class="text-xs text-red-600 mt-2">{{ stats.failedPercentage }}% dari total</p>
           </div>
           <div class="bg-red-100 p-4 rounded-lg">
@@ -55,7 +55,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-gray-500 text-sm font-medium">Akses Hari Ini</p>
-            <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.todayAccess }}</p>
+            <p class="text-3xl font-bold text-gray-900 mt-2">{{ todayAccessAnimated }}</p>
             <p class="text-xs text-amber-600 mt-2">{{ stats.averageDaily }} rata-rata/hari</p>
           </div>
           <div class="bg-amber-100 p-4 rounded-lg">
@@ -76,19 +76,19 @@
           <div>
             <div class="flex justify-between mb-2">
               <span class="text-sm font-medium text-gray-600">Sukses</span>
-              <span class="text-sm font-bold text-green-600">{{ stats.successPercentage }}%</span>
+              <span class="text-sm font-bold text-green-600">{{ successPercentageAnimated }}%</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-3">
-              <div class="bg-green-500 h-3 rounded-full" :style="{ width: stats.successPercentage + '%' }"></div>
+              <div class="bg-green-500 h-3 rounded-full" :style="{ width: mounted ? stats.successPercentage + '%' : '0%', transition: 'width 900ms cubic-bezier(.22,1,.36,1)' }"></div>
             </div>
           </div>
           <div>
             <div class="flex justify-between mb-2">
               <span class="text-sm font-medium text-gray-600">Gagal</span>
-              <span class="text-sm font-bold text-red-600">{{ stats.failedPercentage }}%</span>
+              <span class="text-sm font-bold text-red-600">{{ failedPercentageAnimated }}%</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-3">
-              <div class="bg-red-500 h-3 rounded-full" :style="{ width: stats.failedPercentage + '%' }"></div>
+              <div class="bg-red-500 h-3 rounded-full" :style="{ width: mounted ? stats.failedPercentage + '%' : '0%', transition: 'width 900ms cubic-bezier(.22,1,.36,1)' }"></div>
             </div>
           </div>
         </div>
@@ -113,18 +113,20 @@
           <!-- Pie Chart Visualization -->
           <div class="flex justify-center items-center">
             <div class="relative w-40 h-40">
-              <svg class="transform -rotate-90 w-40 h-40" viewBox="0 0 100 100">
-                <!-- Sukses -->
-                <circle cx="50" cy="50" r="40" fill="none" stroke="#10B981" stroke-width="15"
-                  stroke-dasharray="251.2" stroke-dashoffset="0" />
-                <!-- Gagal -->
-                <circle cx="50" cy="50" r="40" fill="none" stroke="#EF4444" stroke-width="15"
-                  stroke-dasharray="62.8" stroke-dashoffset="-251.2" />
+              <svg class="transform -rotate-90 w-40 h-40" viewBox="0 0 100 100" aria-hidden="true">
+                <!-- Background ring -->
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#EEF2F7" stroke-width="15" />
+                <!-- Sukses slice -->
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#10B981" stroke-width="15" stroke-linecap="round"
+                  :stroke-dasharray="displaySuccessDash" stroke-dashoffset="0" :style="{ transition: 'stroke-dasharray 900ms cubic-bezier(.22,1,.36,1)' }" />
+                <!-- Gagal slice (offset by success length) -->
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#EF4444" stroke-width="15" stroke-linecap="round"
+                  :stroke-dasharray="displayFailDash" :stroke-dashoffset="displayFailOffset" :style="{ transition: 'stroke-dasharray 900ms cubic-bezier(.22,1,.36,1), stroke-dashoffset 900ms cubic-bezier(.22,1,.36,1)' }" />
               </svg>
               <div class="absolute inset-0 flex items-center justify-center">
                 <div class="text-center">
                   <p class="text-sm text-gray-600">Tingkat Sukses</p>
-                  <p class="text-2xl font-bold text-gray-900">{{ stats.successPercentage }}%</p>
+                  <p class="text-2xl font-bold text-gray-900">{{ successPercentageAnimated }}%</p>
                 </div>
               </div>
             </div>
@@ -184,7 +186,7 @@
         </table>
       </div>
       <div class="mt-4 text-center">
-        <button class="px-4 py-2 text-blue-600 hover:text-blue-800 font-medium text-sm">
+        <button @click="goToLogs" class="px-4 py-2 text-blue-600 hover:text-blue-800 font-medium text-sm">
           Lihat Semua Log →
         </button>
       </div>
@@ -193,7 +195,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useCountUp } from '../../composables/useCountUp'
 
 const stats = ref({
   totalUsers: 24,
@@ -212,6 +216,39 @@ const recentLogs = ref([
   { time: '12/11/2025 14:05:33', uid: 'user001', user: 'Budi Santoso', status: 'sukses', message: 'Pintu dibuka dengan PIN' },
   { time: '12/11/2025 13:52:09', uid: 'user004', user: 'Dewi Lestari', status: 'sukses', message: 'Pintu dibuka dengan RFID' },
 ])
+
+const router = useRouter()
+
+const goToLogs = () => {
+  router.push('/logs')
+}
+
+
+// Pie chart calculations
+const pieRadius = 40
+const pieCircumference = 2 * Math.PI * pieRadius
+const successStroke = computed(() => (pieCircumference * (stats.value.successPercentage || 0)) / 100)
+const failStroke = computed(() => (pieCircumference * (stats.value.failedPercentage || 0)) / 100)
+const successDash = computed(() => `${successStroke.value} ${Math.max(0, pieCircumference - successStroke.value)}`)
+const failDash = computed(() => `${failStroke.value} ${Math.max(0, pieCircumference - failStroke.value)}`)
+const failOffset = computed(() => `-${successStroke.value}`)
+// mounted flag for transitions
+const mounted = ref(false)
+onMounted(() => {
+  setTimeout(() => { mounted.value = true }, 60)
+})
+
+// animated values
+const totalUsersAnimated = useCountUp(computed(() => stats.value.totalUsers), { duration: 900 })
+const successAccessAnimated = useCountUp(computed(() => stats.value.successAccess), { duration: 900 })
+const failedAccessAnimated = useCountUp(computed(() => stats.value.failedAccess), { duration: 900 })
+const successPercentageAnimated = useCountUp(computed(() => stats.value.successPercentage), { duration: 900 })
+const failedPercentageAnimated = useCountUp(computed(() => stats.value.failedPercentage), { duration: 900 })
+const todayAccessAnimated = useCountUp(computed(() => stats.value.todayAccess), { duration: 900 })
+
+const displaySuccessDash = computed(() => (mounted.value ? successDash.value : `0 ${pieCircumference}`))
+const displayFailDash = computed(() => (mounted.value ? failDash.value : `0 ${pieCircumference}`))
+const displayFailOffset = computed(() => (mounted.value ? failOffset.value : `0`))
 </script>
 
 <style scoped>

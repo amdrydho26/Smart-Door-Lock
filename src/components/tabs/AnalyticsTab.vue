@@ -8,55 +8,26 @@
       </div>
     </div>
 
-    <!-- Date Range Filter -->
-    <div class="bg-white rounded-lg shadow-md p-6">
-      <div class="flex flex-col md:flex-row gap-4 items-center">
-        <div class="flex-1">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Periode</label>
-          <select v-model="dateRange" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-            <option value="today">Hari Ini</option>
-            <option value="week">Minggu Ini</option>
-            <option value="month">Bulan Ini</option>
-            <option value="year">Tahun Ini</option>
-            <option value="custom">Custom</option>
-          </select>
-        </div>
-        <div v-if="dateRange === 'custom'" class="flex-1">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Tanggal</label>
-          <div class="flex gap-2">
-            <input type="date" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <span class="flex items-center">-</span>
-            <input type="date" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
-        </div>
-        <div class="flex gap-2 md:self-end">
-          <button class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
-            Perbarui
-          </button>
-        </div>
-      </div>
-    </div>
 
-    <!-- Top Statistics -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-md p-6 border-l-4 border-blue-500">
         <p class="text-blue-600 text-sm font-medium">Total Akses</p>
-        <p class="text-3xl font-bold text-blue-900 mt-2">{{ analyticsData.totalAccess }}</p>
+        <p class="text-3xl font-bold text-blue-900 mt-2">{{ totalAccessAnimated }}</p>
         <p class="text-xs text-blue-600 mt-2">↑ 12% dari minggu lalu</p>
       </div>
       <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow-md p-6 border-l-4 border-green-500">
         <p class="text-green-600 text-sm font-medium">Akses Sukses</p>
-        <p class="text-3xl font-bold text-green-900 mt-2">{{ analyticsData.successCount }}</p>
-        <p class="text-xs text-green-600 mt-2">{{ analyticsData.successPercentage }}% tingkat sukses</p>
+        <p class="text-3xl font-bold text-green-900 mt-2">{{ successCountAnimated }}</p>
+        <p class="text-xs text-green-600 mt-2">{{ successPercentageAnimated }}% tingkat sukses</p>
       </div>
       <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg shadow-md p-6 border-l-4 border-red-500">
         <p class="text-red-600 text-sm font-medium">Akses Gagal</p>
-        <p class="text-3xl font-bold text-red-900 mt-2">{{ analyticsData.failedCount }}</p>
-        <p class="text-xs text-red-600 mt-2">{{ analyticsData.failedPercentage }}% tingkat kegagalan</p>
+        <p class="text-3xl font-bold text-red-900 mt-2">{{ failedCountAnimated }}</p>
+        <p class="text-xs text-red-600 mt-2">{{ failedPercentageAnimated }}% tingkat kegagalan</p>
       </div>
       <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow-md p-6 border-l-4 border-purple-500">
         <p class="text-purple-600 text-sm font-medium">User Aktif</p>
-        <p class="text-3xl font-bold text-purple-900 mt-2">{{ analyticsData.activeUsers }}</p>
+        <p class="text-3xl font-bold text-purple-900 mt-2">{{ activeUsersAnimated }}</p>
         <p class="text-xs text-purple-600 mt-2">Minggu ini</p>
       </div>
     </div>
@@ -66,9 +37,9 @@
       <!-- Grafik Penggunaan Pintu Harian -->
       <div class="bg-white rounded-lg shadow-md p-6">
         <h3 class="text-lg font-bold text-gray-900 mb-6">Penggunaan Pintu (Per Hari)</h3>
-        <div class="h-80 flex items-end justify-end gap-3 pb-8">
+        <div class="h-100 flex items-end justify-end gap-3 pt-6">
           <div v-for="(day, index) in dailyUsage" :key="index" class="flex-1 flex flex-col items-center group">
-            <div class="w-full bg-gradient-to-t from-blue-400 to-blue-500 rounded-t-lg transition-all duration-300 group-hover:from-blue-500 group-hover:to-blue-600" :style="{ height: `${(day.value / 100) * 300}px` }"></div>
+            <div class="w-full bg-gradient-to-t from-blue-400 to-blue-500 rounded-t-lg transition-all duration-300 group-hover:from-blue-500 group-hover:to-blue-600" :style="{ height: mounted ? `${(day.value / 100) * 300}px` : '0px', transition: 'height 900ms cubic-bezier(.22,1,.36,1)' }"></div>
             <p class="text-xs text-gray-600 mt-2 font-medium">{{ day.day }}</p>
             <p class="text-xs text-gray-500">{{ day.value }}</p>
           </div>
@@ -98,30 +69,18 @@
                 <stop offset="100%" stop-color="#3B82F6" stop-opacity="0" />
               </linearGradient>
             </defs>
-            
-            <!-- Filled area under line -->
-            <polygon points="55,224 140,148 225,160 310,88 395,44 480,28 565,172 55,270 565,270" fill="url(#chartGradient)" />
-            
-            <!-- Line chart -->
-            <polyline points="55,224 140,148 225,160 310,88 395,44 480,28 565,172" fill="none" stroke="#3B82F6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-            
-            <!-- Data points -->
-            <circle cx="55" cy="224" r="4" fill="#3B82F6" stroke="white" stroke-width="2" />
-            <circle cx="140" cy="148" r="4" fill="#3B82F6" stroke="white" stroke-width="2" />
-            <circle cx="225" cy="160" r="4" fill="#3B82F6" stroke="white" stroke-width="2" />
-            <circle cx="310" cy="88" r="4" fill="#3B82F6" stroke="white" stroke-width="2" />
-            <circle cx="395" cy="44" r="4" fill="#3B82F6" stroke="white" stroke-width="2" />
-            <circle cx="480" cy="28" r="4" fill="#3B82F6" stroke="white" stroke-width="2" />
-            <circle cx="565" cy="172" r="4" fill="#3B82F6" stroke="white" stroke-width="2" />
-            
-            <!-- X axis labels -->
-            <text x="55" y="295" text-anchor="middle" font-size="12" fill="#666">00:00</text>
-            <text x="140" y="295" text-anchor="middle" font-size="12" fill="#666">04:00</text>
-            <text x="225" y="295" text-anchor="middle" font-size="12" fill="#666">08:00</text>
-            <text x="310" y="295" text-anchor="middle" font-size="12" fill="#666">12:00</text>
-            <text x="395" y="295" text-anchor="middle" font-size="12" fill="#666">16:00</text>
-            <text x="480" y="295" text-anchor="middle" font-size="12" fill="#666">20:00</text>
-            <text x="565" y="295" text-anchor="middle" font-size="12" fill="#666">23:00</text>
+
+            <!-- Filled area under line (dynamic) -->
+            <polygon :points="areaPoints" fill="url(#chartGradient)" />
+
+            <!-- Line chart (dynamic) -->
+            <polyline :points="linePoints" fill="none" stroke="#3B82F6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+
+            <!-- Data points (dynamic) -->
+            <circle v-for="(p, i) in pointsData" :key="i" :cx="p.x" :cy="p.y" r="4" fill="#3B82F6" stroke="white" stroke-width="2" />
+
+            <!-- X axis labels (dynamic) -->
+            <text v-for="(p, i) in pointsData" :key="'lbl-'+i" :x="p.x" y="295" text-anchor="middle" font-size="12" fill="#666">{{ p.time }}</text>
             
             <!-- Y axis labels -->
             <text x="20" y="275" text-anchor="end" font-size="11" fill="#666">0</text>
@@ -150,7 +109,7 @@
               <span class="text-sm font-bold text-gray-900">{{ hour.count }} akses</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-              <div class="bg-gradient-to-r from-amber-400 to-amber-500 h-3 rounded-full transition-all duration-300 group-hover:from-amber-500 group-hover:to-amber-600" :style="{ width: `${(hour.count / 35) * 100}%` }"></div>
+              <div class="bg-gradient-to-r from-amber-400 to-amber-500 h-3 rounded-full transition-all duration-300 group-hover:from-amber-500 group-hover:to-amber-600" :style="{ width: mounted ? `${(hour.count / 35) * 100}%` : '0%', transition: 'width 900ms cubic-bezier(.22,1,.36,1)' }"></div>
             </div>
           </div>
         </div>
@@ -196,7 +155,7 @@
         </div>
         <div class="bg-white rounded-lg p-4">
           <p class="text-sm text-gray-600 mb-2">Rata-rata Akses/Hari</p>
-          <p class="text-2xl font-bold text-blue-600">{{ analyticsData.avgDaily }}</p>
+          <p class="text-2xl font-bold text-blue-600">{{ avgDailyAnimated }}</p>
           <p class="text-xs text-gray-500 mt-1">Konsisten dan stabil</p>
         </div>
         <div class="bg-white rounded-lg p-4">
@@ -251,9 +210,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-
-const dateRange = ref('week')
+import { ref, computed, onMounted } from 'vue'
+import { useCountUp } from '../../composables/useCountUp'
 
 const analyticsData = ref({
   totalAccess: 456,
@@ -265,6 +223,20 @@ const analyticsData = ref({
   avgDaily: 65,
 })
 
+// Animated counters
+const totalAccessAnimated = useCountUp(computed(() => analyticsData.value.totalAccess), { duration: 900 })
+const successCountAnimated = useCountUp(computed(() => analyticsData.value.successCount), { duration: 900 })
+const failedCountAnimated = useCountUp(computed(() => analyticsData.value.failedCount), { duration: 900 })
+const activeUsersAnimated = useCountUp(computed(() => analyticsData.value.activeUsers), { duration: 900 })
+const successPercentageAnimated = useCountUp(computed(() => analyticsData.value.successPercentage), { duration: 900 })
+const failedPercentageAnimated = useCountUp(computed(() => analyticsData.value.failedPercentage), { duration: 900 })
+const avgDailyAnimated = useCountUp(computed(() => analyticsData.value.avgDaily), { duration: 900 })
+
+const mounted = ref(false)
+onMounted(() => {
+  setTimeout(() => { mounted.value = true }, 60)
+})
+
 const dailyUsage = ref([
   { day: 'Senin', value: 78 },
   { day: 'Selasa', value: 85 },
@@ -272,9 +244,13 @@ const dailyUsage = ref([
   { day: 'Kamis', value: 68 },
   { day: 'Jumat', value: 95 },
   { day: 'Sabtu', value: 45 },
-  { day: 'Minggu', value: 35 },
+  { day: 'Minggu', value: 10 },
 ])
+const maxDaily = computed(() => Math.max(...dailyUsage.value.map(d => d.value), 1))
 
+const barScale = (val) => {
+  return (val / maxDaily.value) * 100
+}
 const hourlyUsage = ref([
   { time: '00:00', value: 2 },
   { time: '04:00', value: 1 },
@@ -282,11 +258,52 @@ const hourlyUsage = ref([
   { time: '12:00', value: 12 },
   { time: '16:00', value: 15 },
   { time: '20:00', value: 18 },
-  { time: '23:00', value: 6 },
+  { time: '23:00', value: 10 },
 ])
 
 const avgHourlyAccess = computed(() => {
   return Math.round(hourlyUsage.value.reduce((sum, h) => sum + h.value, 0) / hourlyUsage.value.length)
+})
+
+const chartConfig = {
+  width: 800,
+  height: 300,
+  left: 40,
+  right: 760,
+  top: 30,
+  bottom: 270,
+}
+
+const scaleMax = computed(() => {
+  const maxVal = Math.max(...hourlyUsage.value.map(h => h.value))
+  return Math.max(20, Math.ceil(maxVal / 5) * 5)
+})
+
+const pointsData = computed(() => {
+  const left = chartConfig.left
+  const right = chartConfig.right
+  const top = chartConfig.top
+  const bottom = chartConfig.bottom
+  const drawableHeight = bottom - top
+  const n = hourlyUsage.value.length
+  const step = n > 1 ? (right - left) / (n - 1) : 0
+  const max = scaleMax.value
+  return hourlyUsage.value.map((h, idx) => {
+    const x = left + idx * step
+    const y = bottom - (h.value / max) * drawableHeight
+    return { x, y, time: h.time, value: h.value }
+  })
+})
+
+const linePoints = computed(() => pointsData.value.map(p => `${p.x},${p.y}`).join(' '))
+
+const areaPoints = computed(() => {
+  if (!pointsData.value.length) return ''
+  const pts = pointsData.value.map(p => `${p.x},${p.y}`).join(' ')
+  const left = chartConfig.left
+  const right = chartConfig.right
+  const bottom = chartConfig.bottom
+  return `${pts} ${right},${bottom} ${left},${bottom}`
 })
 
 const busyHours = ref([
@@ -299,7 +316,7 @@ const busyHours = ref([
 ])
 
 const topUsers = ref([
-  { uid: 'user001', name: 'Budi Santoso', count: 65 },
+  { uid: 'user011', name: 'Budi Doremi', count: 75 },
   { uid: 'user002', name: 'Siti Nurhaliza', count: 54 },
   { uid: 'user004', name: 'Dewi Lestari', count: 48 },
   { uid: 'user005', name: 'Ahmad Rizaldi', count: 42 },
