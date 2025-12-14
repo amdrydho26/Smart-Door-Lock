@@ -56,7 +56,12 @@
               <p class="text-gray-500 mt-2">v1.0.0</p>
             </div>
             <div class="mt-4">
-              <button v-if="isLoggedIn" @click="handleLogout" class="w-full px-3 py-2 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 transition">Logout</button>
+              <button v-if="isLoggedIn" :disabled="loggingOut" @click="handleLogout" class="w-full px-3 py-2 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 transition disabled:opacity-50 cursor-pointer" aria-pressed="false">{{ loggingOut ? 'Logging out...' : 'Logout' }}</button>
+              <p v-if="logoutClicked" class="text-xs text-gray-500 mt-2">Terakhir klik: {{ logoutClicked }}</p>
+              <p v-if="logoutMessage" :class="[logoutMessage.includes('Gagal') ? 'text-red-600' : 'text-green-600', 'text-sm mt-1']">{{ logoutMessage }}</p>
+              <div v-if="showForceLogout" class="mt-2">
+                <button @click="forceLogout" class="text-xs text-left text-yellow-600 hover:underline">Paksa logout lokal</button>
+              </div>
             </div>
         </div>
       </aside>
@@ -95,17 +100,56 @@ const tabs = [
   { id: 'analytics', label: 'Analitik', path: '/analytics', icon: ChartIcon },
 ]
 
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from './composables/useAuth'
 
 const route = useRoute()
 const router = useRouter()
 const { isLoggedIn, logout } = useAuth()
+const logoutClicked = ref(null)
+const logoutMessage = ref('')
+const loggingOut = ref(false)
+const showForceLogout = ref(false)
+let forceLogoutTimer = null
 const showShell = computed(() => route.name !== 'login')
 
-const handleLogout = () => {
-  logout()
+const handleLogout = async () => {
+  if (loggingOut.value) return
+  console.log('[App] handleLogout start')
+  loggingOut.value = true
+  logoutClicked.value = new Date().toLocaleTimeString()
+  showForceLogout.value = false
+  forceLogoutTimer = setTimeout(() => (showForceLogout.value = true), 5000)
+  try {
+    console.log('[App] calling logout()')
+    await logout()
+    console.log('[App] logout() resolved')
+    logoutMessage.value = 'Berhasil logout.'
+    // Navigate only on successful logout
+    router.push({ name: 'login' })
+  } catch (err) {
+    console.warn('[App] Logout failed', err)
+    logoutMessage.value = 'Gagal logout: ' + (err?.message || 'Terjadi kesalahan')
+    // Make force logout option available immediately when signOut fails
+    showForceLogout.value = true
+    loggingOut.value = false
+    return
+  } finally {
+    loggingOut.value = false
+    clearTimeout(forceLogoutTimer)
+    setTimeout(() => (logoutMessage.value = ''), 3000)
+  }
+  
+}
+
+const forceLogout = () => {
+  console.log('[App] forceLogout local cleanup')
+  localStorage.removeItem('isLoggedIn')
+  logoutMessage.value = 'Dikeluarkan secara lokal.'
+  loggingOut.value = false
+  showForceLogout.value = false
+  setTimeout(() => (logoutMessage.value = ''), 3000)
   router.push({ name: 'login' })
 }
 

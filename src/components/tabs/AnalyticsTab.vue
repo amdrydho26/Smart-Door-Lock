@@ -26,7 +26,7 @@
         <p class="text-xs text-red-600 mt-2">{{ failedPercentageAnimated }}% tingkat kegagalan</p>
       </div>
       <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow-md p-6 border-l-4 border-purple-500">
-        <p class="text-purple-600 text-sm font-medium">User Aktif</p>
+        <p class="text-purple-600 text-sm font-medium">User Active</p>
         <p class="text-3xl font-bold text-purple-900 mt-2">{{ activeUsersAnimated }}</p>
         <p class="text-xs text-purple-600 mt-2">Minggu ini</p>
       </div>

@@ -71,7 +71,7 @@
         <p class="text-xs text-red-600 mt-2">{{ failedPercentageAnimated }}%</p>
       </div>
       <div class="bg-white rounded-lg shadow-md p-6">
-        <p class="text-gray-500 text-sm font-medium">User Aktif</p>
+        <p class="text-gray-500 text-sm font-medium">User Active</p>
         <p class="text-3xl font-bold text-blue-600 mt-2">{{ activeUsersAnimated }}</p>
         <p class="text-xs text-blue-600 mt-2">Minggu ini</p>
       </div>
@@ -226,7 +226,7 @@ const allLogs = ref([
   { time: '12/11/2025 13:25:15', uid: 'user006', userName: 'Ratna Wijaya', status: 'sukses', message: 'Pintu dibuka dengan PIN' },
   { time: '12/11/2025 13:10:47', uid: 'user002', userName: 'Siti Nurhaliza', status: 'sukses', message: 'Pintu dibuka dengan RFID' },
   { time: '12/10/2025 16:45:33', uid: 'user001', userName: 'Budi Santoso', status: 'sukses', message: 'Pintu dibuka dengan PIN' },
-  { time: '12/10/2025 16:20:09', uid: 'user003', userName: 'Rinto Harahap', status: 'gagal', message: 'User tidak aktif' },
+  { time: '12/10/2025 16:20:09', uid: 'user003', userName: 'Rinto Harahap', status: 'gagal', message: 'User nonActive' },
   { time: '12/10/2025 16:05:22', uid: 'user004', userName: 'Dewi Lestari', status: 'sukses', message: 'Pintu dibuka dengan RFID' },
   { time: '12/10/2025 15:45:15', uid: 'user005', userName: 'Ahmad Rizaldi', status: 'sukses', message: 'Pintu dibuka dengan RFID' },
   { time: '12/10/2025 15:30:47', uid: 'user006', userName: 'Ratna Wijaya', status: 'gagal', message: 'PIN salah (Percobaan 1)' },

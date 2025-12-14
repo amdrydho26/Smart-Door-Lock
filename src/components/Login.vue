@@ -21,7 +21,7 @@
           <input v-model="password" type="password" placeholder="Password" class="w-full mt-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
         <div>
-          <button type="submit" class="w-full px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition">Masuk</button>
+          <button :disabled="loading" type="submit" class="w-full px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition disabled:opacity-50">{{ loading ? 'Masuk...' : 'Masuk' }}</button>
         </div>
       </form>
 
@@ -39,17 +39,51 @@ const username = ref('')
 const password = ref('')
 const error = ref('')
 const router = useRouter()
-const { login } = useAuth()
+const { login, isLoggedIn } = useAuth()
+const successMessage = ref('')
+const loading = ref(false)
 
-const onSubmit = () => {
+const onSubmit = async () => {
   error.value = ''
   if (!username.value || !password.value) {
-    error.value = 'Harap masukkan username dan password.'
+    error.value = 'Harap masukkan email dan password.'
     return
   }
-  // For demo purposes, set logged-in flag and navigate to beranda.
-  login()
-  router.push('/')
+  // Help users: Supabase authenticates with email
+  if (!username.value.includes('@')) {
+    error.value = 'Harap menggunakan email, bukan username.'
+    return
+  }
+  loading.value = true
+  try {
+    const result = await login({ email: username.value, password: password.value })
+    loading.value = false
+    console.log('[Login.vue] login result', result)
+    if (result?.error) {
+      error.value = result.error.message || 'Gagal masuk. Periksa kredensial.'
+      return
+    }
+    // If server returned a user or session, consider login successful
+    if (result?.data?.user || result?.data?.session) {
+      successMessage.value = 'Berhasil masuk. Mengalihkan...'
+      localStorage.setItem('isLoggedIn', '1')
+      router.replace({ name: 'beranda' })
+      return
+    }
+    // Otherwise wait briefly for auth state change to update
+    successMessage.value = 'Login diterima. Menunggu sinkronisasi sesi...'
+    setTimeout(() => {
+      if (isLoggedIn?.value) {
+        router.replace({ name: 'beranda' })
+      } else {
+        error.value = 'Login diterima tetapi sesi belum terdaftar. Coba muat ulang.'
+      }
+    }, 1200)
+  } catch (err) {
+    loading.value = false
+    console.warn('[Login.vue] login thrown error', err)
+    error.value = err?.message || 'Terjadi kesalahan saat mencoba masuk.'
+  }
 }
 </script>
 
