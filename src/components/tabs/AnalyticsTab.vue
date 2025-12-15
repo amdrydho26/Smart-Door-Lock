@@ -99,7 +99,15 @@
           </svg>
         </div>
         <div class="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
-          <p class="text-xs text-gray-600">Trend Akses: <span class="font-bold text-green-600">↑ Meningkat</span></p>
+          <p class="text-xs text-gray-600">Trend Akses:
+            <span :class="[
+              'font-bold',
+              accessTrend.dir === 'up' ? 'text-green-600' : accessTrend.dir === 'down' ? 'text-red-600' : 'text-gray-600'
+            ]">
+              {{ accessTrend.text }}
+            </span>
+            <span class="text-xs text-gray-400 ml-2">vs hari sebelumnya</span>
+          </p>
           <p class="text-xs text-gray-600">Rata-rata: <span class="font-bold">{{ avgHourlyAccess }} akses/jam</span></p>
         </div>
       </div>
@@ -479,6 +487,41 @@ const busyMax = computed(() => busyHours.value && busyHours.value.length ? Math.
 
 const avgHourlyAccess = computed(() => {
   return Math.round(hourlyUsage.value.reduce((sum, h) => sum + h.value, 0) / hourlyUsage.value.length)
+})
+
+const accessTrend = computed(() => {
+  // Compare last 7 days vs previous 7 days (14-day window ending at last log date)
+  const all = (logs.value || []).slice()
+  const parsedDates = all.map(l => parseLogTime(l.time)).filter(d => !isNaN(d))
+  if (parsedDates.length === 0) return { dir: 'stable', text: '— Stabil', percent: 0 }
+
+  const lastDate = new Date(Math.max(...parsedDates.map(d => d.getTime())))
+  const endDay = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate())
+
+  const counts = []
+  for (let i = 0; i < 14; i++) {
+    const dt = new Date(endDay.getFullYear(), endDay.getMonth(), endDay.getDate() - i)
+    const start = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 0,0,0,0)
+    const end = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 23,59,59,999)
+    const count = all.reduce((acc, l) => {
+      const d = parseLogTime(l.time)
+      return (!isNaN(d) && d >= start && d <= end) ? acc + 1 : acc
+    }, 0)
+    counts.unshift(count) // oldest first
+  }
+
+  const prev7 = counts.slice(0,7).reduce((s,v)=>s+v,0)
+  const last7 = counts.slice(7).reduce((s,v)=>s+v,0)
+
+  if (prev7 === 0) {
+    if (last7 === 0) return { dir: 'stable', text: '— Stabil', percent: 0 }
+    return { dir: 'up', text: `↑ ${last7} (new)`, percent: 100 }
+  }
+
+  const pct = Math.round(((last7 - prev7) / prev7) * 100)
+  if (pct > 0) return { dir: 'up', text: `↑ ${pct}% Meningkat`, percent: pct }
+  if (pct < 0) return { dir: 'down', text: `↓ ${Math.abs(pct)}% Menurun`, percent: Math.abs(pct) }
+  return { dir: 'stable', text: '— Stabil', percent: 0 }
 })
 
 const chartConfig = {

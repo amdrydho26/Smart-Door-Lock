@@ -15,11 +15,7 @@
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <div class="hidden md:flex items-center space-x-2 bg-green-50 px-3 py-1 rounded-lg flex-shrink-0">
-            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span class="text-xs font-medium text-green-700 whitespace-nowrap">System Online</span>
-          </div>
-          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=dashboard" alt="Profile" class="w-10 h-10 rounded-full flex-shrink-0">
+          <button @click="handleLogout" :disabled="loggingOut" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 transition disabled:opacity-50 cursor-pointer" aria-pressed="false">{{ loggingOut ? 'Logging out...' : 'Logout' }}</button>
         </div>
       </div>
     </header>
@@ -48,20 +44,7 @@
         <!-- Footer Info in Sidebar -->
         <div class="fixed bottom-0 left-0 w-64 p-4 bg-gradient-to-t from-gray-50 to-transparent border-t border-gray-200">
             <div class="text-xs text-gray-600 space-y-2">
-              <p class="font-semibold">Status Sistem</p>
-              <div class="flex items-center space-x-2">
-                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span>Online</span>
-              </div>
-              <p class="text-gray-500 mt-2">v1.0.0</p>
-            </div>
-            <div class="mt-4">
-              <button v-if="isLoggedIn" :disabled="loggingOut" @click="handleLogout" class="w-full px-3 py-2 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 transition disabled:opacity-50 cursor-pointer" aria-pressed="false">{{ loggingOut ? 'Logging out...' : 'Logout' }}</button>
-              <p v-if="logoutClicked" class="text-xs text-gray-500 mt-2">Terakhir klik: {{ logoutClicked }}</p>
-              <p v-if="logoutMessage" :class="[logoutMessage.includes('Gagal') ? 'text-red-600' : 'text-green-600', 'text-sm mt-1']">{{ logoutMessage }}</p>
-              <div v-if="showForceLogout" class="mt-2">
-                <button @click="forceLogout" class="text-xs text-left text-yellow-600 hover:underline">Paksa logout lokal</button>
-              </div>
+              <p class="text-gray-500 font-semibold">v1.4.1</p>
             </div>
         </div>
       </aside>
