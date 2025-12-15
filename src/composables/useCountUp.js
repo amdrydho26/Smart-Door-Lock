@@ -3,7 +3,6 @@ import { ref, watch, onMounted } from 'vue'
 export function useCountUp(targetValue, options = {}) {
   const { duration = 800, decimals = 0 } = options
   const displayed = ref(0)
-  const targetRef = ref(typeof targetValue === 'function' ? targetValue() : targetValue)
 
   const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3)
 
@@ -20,15 +19,26 @@ export function useCountUp(targetValue, options = {}) {
     requestAnimationFrame(step)
   }
 
+  const getTargetValue = () => {
+    if (typeof targetValue === 'function') return Number(targetValue()) || 0
+    if (targetValue && typeof targetValue === 'object' && 'value' in targetValue) return Number(targetValue.value) || 0
+    return Number(targetValue) || 0
+  }
+
   onMounted(() => {
-    const to = Number(targetRef.value) || 0
-    animate(0, to)
+    animate(0, getTargetValue())
   })
 
-  // when the targetValue is a ref or function, allow updating
-  if (typeof targetValue !== 'function' && targetValue && Object.prototype.hasOwnProperty.call(targetValue, 'value')) {
+  // watch ref/computed values for changes
+  if (targetValue && typeof targetValue === 'object' && 'value' in targetValue) {
+    watch(() => targetValue.value, (v, old) => {
+      const newVal = Number(v) || 0
+      if (newVal !== Number(old || 0)) animate(Number(displayed.value), newVal)
+    })
+  } else if (typeof targetValue === 'function') {
     watch(targetValue, (v, old) => {
-      if (v !== old) animate(Number(displayed.value), Number(v))
+      const newVal = Number(v) || 0
+      if (newVal !== Number(old || 0)) animate(Number(displayed.value), newVal)
     })
   }
 

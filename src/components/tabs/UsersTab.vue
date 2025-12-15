@@ -117,6 +117,13 @@
           <span v-else class="font-bold text-gray-900">Terpilih</span>
         </h3>
         <div v-if="selectedUserForHistory">
+          <div class="flex items-center justify-between mb-3">
+            <div class="text-xs text-gray-500">Terakhir dimuat: {{ lastLogsFetchedAt || '—' }} — {{ lastLogsFetchedCount || 0 }} baris</div>
+            <div>
+              <button @click="selectUserForHistory(selectedUserForHistory)" class="px-3 py-1 text-xs border rounded mr-2">Muat Ulang</button>
+              <button @click="unsubscribeLogs()" class="px-3 py-1 text-xs border rounded">Berhenti Realtime</button>
+            </div>
+          </div>
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
               <thead class="bg-gray-50 border-b border-gray-200">
@@ -132,11 +139,11 @@
                   <td class="px-4 py-2">
                     <span :class="[
                       'px-2 py-1 rounded text-xs font-semibold',
-                      log.status === 'sukses' 
+                      isSuccess(log.status) 
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-red-100 text-red-800'
                     ]">
-                      {{ log.status }}
+                      {{ formatStatus(log.status) }}
                     </span>
                   </td>
                   <td class="px-4 py-2 text-gray-600">{{ log.message }}</td>
@@ -245,10 +252,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useUsers } from '../../composables/useUsers'
+import { isSuccess, formatStatus } from '../../utils/formatStatus'
+import useLogs from '../../composables/useLogs'
+import parseLogTime from '../../utils/parseLogTime'
 
 const { users, fetchUsers, createUser, updateUser, deleteUser, subscribe, loading, error } = useUsers()
+const { logs: logsForUser, fetchLogs: fetchLogsForUser, subscribe: subscribeLogs, unsubscribe: unsubscribeLogs, lastFetchedAt: lastLogsFetchedAt, lastFetchedCount: lastLogsFetchedCount } = useLogs()
 
 const searchQuery = ref('')
 const filterStatus = ref('')
@@ -269,9 +280,14 @@ const formData = ref({
 
 const allLogs = ref({})
 
+
 const selectedUserLogs = computed(() => {
   if (!selectedUserForHistory.value) return []
-  return allLogs.value[selectedUserForHistory.value.uid] || []
+  const uid = selectedUserForHistory.value.uid
+  const list = (allLogs.value[uid] || []).slice()
+  // sort newest first
+  list.sort((a, b) => parseLogTime(b.time) - parseLogTime(a.time))
+  return list
 })
 
 const filteredUsers = computed(() => {
@@ -312,16 +328,39 @@ let unsubscribeRealtime = null
 onMounted(async () => {
   window.addEventListener('keydown', handleEscape)
   await fetchUsers()
-  // setup realtime
+  // setup realtime for users
   unsubscribeRealtime = subscribe()
+  // watch logs from useLogs to keep per-user map updated (for currently selected user)
+  watch(logsForUser, (val) => {
+    if (!selectedUserForHistory.value) return
+    const uid = selectedUserForHistory.value.uid
+    if (!uid) return
+    // merge new logs (most recent first) replacing for selected user
+    allLogs.value[uid] = (val || []).slice()
+  })
 })
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleEscape)
   if (typeof unsubscribeRealtime === 'function') unsubscribeRealtime()
+  // remove logs subscription if active
+  try {
+    unsubscribeLogs()
+  } catch (e) {
+    // ignore
+  }
 })
 
-const selectUserForHistory = (user) => {
+const selectUserForHistory = async (user) => {
   selectedUserForHistory.value = user
+  try {
+    await fetchLogsForUser({ uid: user.uid, limit: 1000, sortBy: 'newest' })
+    // copy current logs into map for this user
+    allLogs.value[user.uid] = (logsForUser.value || []).slice()
+    // subscribe for live updates (single channel managed by composable)
+    subscribeLogs()
+  } catch (e) {
+    console.error('failed to load logs for user', e)
+  }
 }
 
 const resetFilters = () => {

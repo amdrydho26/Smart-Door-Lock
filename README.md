@@ -9,7 +9,11 @@ Supabase integration
 
 1. Copy `.env.example` to `.env.local` and set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
 2. Install dependency: `npm install` (already added `@supabase/supabase-js`).
-3. The app uses `src/supabase.js` and `src/composables/useAuth.js` for auth. Login sends email/password to Supabase.
+3. Use `.env.example` to create `.env.local` and fill `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (do NOT commit `.env.local`).
+4. Quick test: run `npm run test:supabase` to verify the env vars and a simple `SELECT` from the `log` table.
+5. The app uses `src/supabase.js` and `src/composables/useAuth.js` for auth. Login sends email/password to Supabase.
+
+Important: If your `log` table has Row Level Security (RLS) enabled, ensure there's a policy that allows `SELECT` for the `anon` role or adjust it for your testing environment. If you see permission errors, add a temporary policy `USING (true)` for `SELECT` while debugging (remove it once you configure proper RLS rules).
 
 Database table (userdata)
 -------------------------

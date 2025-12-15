@@ -8,7 +8,7 @@
           <div>
             <p class="text-gray-500 text-sm font-medium">Total User</p>
             <p class="text-3xl font-bold text-gray-900 mt-2">{{ totalUsersAnimated }}</p>
-            <p class="text-xs text-green-600 mt-2">↑ 2 user baru minggu ini</p>
+            <p class="text-xs text-green-600 mt-2">↑ {{ totalUsersAnimated }} user</p>
           </div>
           <div class="bg-blue-100 p-4 rounded-lg">
             <svg class="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
@@ -22,7 +22,7 @@
       <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-gray-500 text-sm font-medium">Akses Sukses</p>
+            <p class="text-gray-500 text-sm font-medium">Akses Berhasil</p>
             <p class="text-3xl font-bold text-gray-900 mt-2">{{ successAccessAnimated }}</p>
             <p class="text-xs text-green-600 mt-2">{{ successPercentageAnimated }}% dari total</p>
           </div>
@@ -56,7 +56,7 @@
           <div>
             <p class="text-gray-500 text-sm font-medium">Akses Hari Ini</p>
             <p class="text-3xl font-bold text-gray-900 mt-2">{{ todayAccessAnimated }}</p>
-            <p class="text-xs text-amber-600 mt-2">{{ stats.averageDaily }} rata-rata/hari</p>
+            <p class="text-xs text-amber-600 mt-2">{{ displayAvgDaily }} rata-rata/hari</p>
           </div>
           <div class="bg-amber-100 p-4 rounded-lg">
             <svg class="w-8 h-8 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
@@ -67,7 +67,7 @@
       </div>
     </div>
 
-    <!-- Sukses vs Gagal Chart -->
+<!-- Berhasil vs Gagal Chart -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Status Summary -->
       <div class="bg-white rounded-lg shadow-md p-6">
@@ -75,7 +75,7 @@
         <div class="space-y-4">
           <div>
             <div class="flex justify-between mb-2">
-              <span class="text-sm font-medium text-gray-600">Sukses</span>
+              <span class="text-sm font-medium text-gray-600">Berhasil</span>
               <span class="text-sm font-bold text-green-600">{{ successPercentageAnimated }}%</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-3">
@@ -96,7 +96,7 @@
         <!-- Summary Stats -->
         <div class="mt-8 grid grid-cols-2 gap-4">
           <div class="bg-green-50 p-4 rounded-lg">
-            <p class="text-gray-600 text-sm">Total Sukses</p>
+            <p class="text-gray-600 text-sm">Total Berhasil</p>
             <p class="text-2xl font-bold text-green-600 mt-1">{{ stats.successAccess }}</p>
           </div>
           <div class="bg-red-50 p-4 rounded-lg">
@@ -108,7 +108,7 @@
 
       <!-- Access Rate Chart -->
       <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-lg font-bold text-gray-900 mb-6">Grafik Sukses vs Gagal</h2>
+        <h2 class="text-lg font-bold text-gray-900 mb-6">Grafik Berhasil vs Gagal</h2>
         <div class="space-y-6">
           <!-- Pie Chart Visualization -->
           <div class="flex justify-center items-center">
@@ -135,7 +135,7 @@
           <div class="flex justify-center space-x-8">
             <div class="text-center">
               <div class="w-4 h-4 bg-green-500 rounded-full mx-auto mb-2"></div>
-              <p class="text-sm text-gray-600">Sukses</p>
+              <p class="text-sm text-gray-600">Berhasil</p>
               <p class="font-bold text-green-600">{{ stats.successAccess }}</p>
             </div>
             <div class="text-center">
@@ -173,14 +173,17 @@
               <td class="py-3 px-4">
                 <span :class="[
                   'px-3 py-1 rounded-full text-xs font-semibold',
-                  log.status === 'sukses' 
+                  isSuccess(log.status) 
                     ? 'bg-green-100 text-green-800' 
                     : 'bg-red-100 text-red-800'
                 ]">
-                  {{ log.status }}
+                  {{ formatStatus(log.status) }}
                 </span>
               </td>
               <td class="py-3 px-4 text-sm text-gray-600">{{ log.message }}</td>
+            </tr>
+            <tr v-if="recentLogs.length === 0">
+              <td colspan="4" class="py-8 text-center text-sm text-gray-500">Tidak ada log untuk ditampilkan</td>
             </tr>
           </tbody>
         </table>
@@ -195,27 +198,29 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCountUp } from '../../composables/useCountUp'
+import { isSuccess, formatStatus } from '../../utils/formatStatus'
+import useLogs from '../../composables/useLogs'
+import { useUsers } from '../../composables/useUsers'
+import parseLogTime from '../../utils/parseLogTime'
+
+const { logs, fetchLogs, subscribe: subscribeLogs, unsubscribe: unsubscribeLogs } = useLogs()
+const { users, fetchUsers } = useUsers()
 
 const stats = ref({
-  totalUsers: 24,
-  successAccess: 342,
-  failedAccess: 23,
-  successPercentage: 94,
-  failedPercentage: 6,
-  todayAccess: 18,
-  averageDaily: 12,
+  totalUsers: 0,
+  successAccess: 0,
+  failedAccess: 0,
+  successPercentage: 0,
+  failedPercentage: 0,
+  todayAccess: 0,
+  averageDaily: 0,
 })
 
-const recentLogs = ref([
-  { time: '12/11/2025 14:35:22', uid: 'user001', user: 'Budi Santoso', status: 'sukses', message: 'Pintu dibuka dengan PIN' },
-  { time: '12/11/2025 14:28:15', uid: 'user002', user: 'Siti Nurhaliza', status: 'sukses', message: 'Pintu dibuka dengan RFID' },
-  { time: '12/11/2025 14:15:47', uid: 'user003', user: 'Rinto Harahap', status: 'gagal', message: 'PIN salah (Percobaan 3)' },
-  { time: '12/11/2025 14:05:33', uid: 'user001', user: 'Budi Santoso', status: 'sukses', message: 'Pintu dibuka dengan PIN' },
-  { time: '12/11/2025 13:52:09', uid: 'user004', user: 'Dewi Lestari', status: 'sukses', message: 'Pintu dibuka dengan RFID' },
-])
+const recentLogs = ref([])
+
 
 const router = useRouter()
 
@@ -234,9 +239,68 @@ const failDash = computed(() => `${failStroke.value} ${Math.max(0, pieCircumfere
 const failOffset = computed(() => `-${successStroke.value}`)
 // mounted flag for transitions
 const mounted = ref(false)
-onMounted(() => {
+onMounted(async () => {
+  // load users and recent logs
+  await fetchUsers()
+  // fetch all logs (no limit) so dashboard counters reflect full dataset
+  await fetchLogs({ limit: null, sortBy: 'newest' })
+  subscribeLogs()
+  recomputeStats()
   setTimeout(() => { mounted.value = true }, 60)
 })
+
+onBeforeUnmount(() => {
+  try { unsubscribeLogs() } catch (e) {}
+})
+
+watch([logs, users], () => {
+  recomputeStats()
+})
+
+function formatRecent(l) {
+  return {
+    time: l.time,
+    uid: l.uid,
+    user: l.userName || l.name || l.uid,
+    status: l.status,
+    message: l.message,
+  }
+}
+
+function recomputeStats() {
+  const all = logs.value || []
+  const us = users.value || []
+  stats.value.totalUsers = us.length
+  stats.value.successAccess = all.filter(l => isSuccess(l.status)).length
+  stats.value.failedAccess = all.length - stats.value.successAccess
+  stats.value.successPercentage = all.length ? Math.round((stats.value.successAccess / all.length) * 100) : 0
+  stats.value.failedPercentage = all.length ? 100 - stats.value.successPercentage : 0
+
+  // today accesses
+  const today = new Date()
+  const tOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  stats.value.todayAccess = all.filter(l => {
+    const d = parseLogTime(l.time)
+    if (isNaN(d)) return false
+    const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+    return dd.getTime() === tOnly.getTime()
+  }).length
+
+  // average per day across full dataset (keep one decimal)
+  const parsedDates = all.map(l => parseLogTime(l.time)).filter(d => !isNaN(d))
+  if (parsedDates.length) {
+    const minD = new Date(Math.min(...parsedDates.map(d => d.getTime())))
+    const maxD = new Date(Math.max(...parsedDates.map(d => d.getTime())))
+    const days = Math.max(1, Math.round((maxD - minD) / (24 * 3600 * 1000)) + 1)
+    stats.value.averageDaily = Math.round(all.length / days)
+  } else {
+    stats.value.averageDaily = 0
+  }
+
+  // recent logs (limit 5 newest)
+  const recent = (all.slice().sort((a,b)=> parseLogTime(b.time) - parseLogTime(a.time))).slice(0,5).map(formatRecent)
+  recentLogs.value = recent
+}
 
 // animated values
 const totalUsersAnimated = useCountUp(computed(() => stats.value.totalUsers), { duration: 900 })
@@ -245,6 +309,10 @@ const failedAccessAnimated = useCountUp(computed(() => stats.value.failedAccess)
 const successPercentageAnimated = useCountUp(computed(() => stats.value.successPercentage), { duration: 900 })
 const failedPercentageAnimated = useCountUp(computed(() => stats.value.failedPercentage), { duration: 900 })
 const todayAccessAnimated = useCountUp(computed(() => stats.value.todayAccess), { duration: 900 })
+
+// expose averageDaily as animated one-decimal display
+const avgDailyOneDecimal = computed(() => stats.value.averageDaily)
+const displayAvgDaily = useCountUp(avgDailyOneDecimal, { duration: 900, decimals: 0 })
 
 const displaySuccessDash = computed(() => (mounted.value ? successDash.value : `0 ${pieCircumference}`))
 const displayFailDash = computed(() => (mounted.value ? failDash.value : `0 ${pieCircumference}`))

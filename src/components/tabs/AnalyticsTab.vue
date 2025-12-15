@@ -2,9 +2,11 @@
   <div class="space-y-6">
     <!-- Header Section -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <div>
-        <h2 class="text-2xl font-bold text-gray-900">Analitik & Statistik</h2>
-        <p class="text-gray-500 text-sm mt-1">Laporan penggunaan dan analisis pintu pintar</p>
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">Analitik & Statistik</h2>
+          <p class="text-gray-500 text-sm mt-1">Laporan penggunaan dan analisis pintu pintar</p>
+        </div>
       </div>
     </div>
 
@@ -16,9 +18,9 @@
         <p class="text-xs text-blue-600 mt-2">↑ 12% dari minggu lalu</p>
       </div>
       <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow-md p-6 border-l-4 border-green-500">
-        <p class="text-green-600 text-sm font-medium">Akses Sukses</p>
+        <p class="text-green-600 text-sm font-medium">Akses Berhasil</p>
         <p class="text-3xl font-bold text-green-900 mt-2">{{ successCountAnimated }}</p>
-        <p class="text-xs text-green-600 mt-2">{{ successPercentageAnimated }}% tingkat sukses</p>
+        <p class="text-xs text-green-600 mt-2">{{ successPercentageAnimated }}% tingkat berhasil</p>
       </div>
       <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg shadow-md p-6 border-l-4 border-red-500">
         <p class="text-red-600 text-sm font-medium">Akses Gagal</p>
@@ -38,10 +40,16 @@
       <div class="bg-white rounded-lg shadow-md p-6">
         <h3 class="text-lg font-bold text-gray-900 mb-6">Penggunaan Pintu (Per Hari)</h3>
         <div class="h-100 flex items-end justify-end gap-3 pt-6">
-          <div v-for="(day, index) in dailyUsage" :key="index" class="flex-1 flex flex-col items-center group">
-            <div class="w-full bg-gradient-to-t from-blue-400 to-blue-500 rounded-t-lg transition-all duration-300 group-hover:from-blue-500 group-hover:to-blue-600" :style="{ height: mounted ? `${(day.value / 100) * 300}px` : '0px', transition: 'height 900ms cubic-bezier(.22,1,.36,1)' }"></div>
-            <p class="text-xs text-gray-600 mt-2 font-medium">{{ day.day }}</p>
-            <p class="text-xs text-gray-500">{{ day.value }}</p>
+          <template v-if="hasChartData">
+            <div v-for="(day, index) in dailyUsage" :key="index" class="flex-1 flex flex-col items-center group">
+              <div class="w-full bg-gradient-to-t from-blue-400 to-blue-500 rounded-t-lg transition-all duration-300 group-hover:from-blue-500 group-hover:to-blue-600" :style="{ height: mounted ? `${(day.value / maxDaily) * 300}px` : '0px', transition: 'height 900ms cubic-bezier(.22,1,.36,1)' }"></div>
+              <p class="text-xs text-gray-600 mt-2 font-medium">{{ day.day }}</p>
+              <p class="text-xs text-gray-500">{{ day.value }}</p>
+            </div>
+          </template>
+          <div v-else class="w-full text-center text-sm text-gray-500 py-12">
+            Tidak ada data waktu (harian) untuk ditampilkan.
+            <div class="mt-3 text-xs text-gray-400">Jika grafik kosong, periksa format `time` pada contoh `sampleLogs`.</div>
           </div>
         </div>
       </div>
@@ -109,7 +117,7 @@
               <span class="text-sm font-bold text-gray-900">{{ hour.count }} akses</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-              <div class="bg-gradient-to-r from-amber-400 to-amber-500 h-3 rounded-full transition-all duration-300 group-hover:from-amber-500 group-hover:to-amber-600" :style="{ width: mounted ? `${(hour.count / 35) * 100}%` : '0%', transition: 'width 900ms cubic-bezier(.22,1,.36,1)' }"></div>
+              <div class="bg-gradient-to-r from-amber-400 to-amber-500 h-3 rounded-full transition-all duration-300 group-hover:from-amber-500 group-hover:to-amber-600" :style="{ width: mounted ? `${(hour.count / (busyMax || 1)) * 100}%` : '0%', transition: 'width 900ms cubic-bezier(.22,1,.36,1)' }"></div>
             </div>
           </div>
         </div>
@@ -149,7 +157,7 @@
       <h3 class="text-lg font-bold text-gray-900 mb-4">📊 Wawasan Analitik</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div class="bg-white rounded-lg p-4">
-          <p class="text-sm text-gray-600 mb-2">Tingkat Kesuksesan</p>
+          <p class="text-sm text-gray-600 mb-2">Tingkat Keberhasilan</p>
           <p class="text-2xl font-bold text-green-600">{{ analyticsData.successPercentage }}%</p>
           <p class="text-xs text-gray-500 mt-1">Sistem bekerja dengan sangat baik</p>
         </div>
@@ -175,9 +183,9 @@
             <tr>
               <th class="px-4 py-3 text-left font-semibold text-gray-700">User</th>
               <th class="px-4 py-3 text-left font-semibold text-gray-700">Total Akses</th>
-              <th class="px-4 py-3 text-left font-semibold text-gray-700">Sukses</th>
+              <th class="px-4 py-3 text-left font-semibold text-gray-700">Berhasil</th>
               <th class="px-4 py-3 text-left font-semibold text-gray-700">Gagal</th>
-              <th class="px-4 py-3 text-left font-semibold text-gray-700">Tingkat Sukses</th>
+              <th class="px-4 py-3 text-left font-semibold text-gray-700">Tingkat Berhasil</th>
               <th class="px-4 py-3 text-left font-semibold text-gray-700">Akses Terakhir</th>
             </tr>
           </thead>
@@ -210,17 +218,24 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useCountUp } from '../../composables/useCountUp'
+import useLogs from '../../composables/useLogs'
+import { useUsers } from '../../composables/useUsers'
+import { isSuccess } from '../../utils/formatStatus'
+import parseLogTime from '../../utils/parseLogTime'
+
+const { logs, fetchLogs, subscribe: subscribeLogs, unsubscribe: unsubscribeLogs } = useLogs()
+const { users, fetchUsers } = useUsers()
 
 const analyticsData = ref({
-  totalAccess: 456,
-  successCount: 428,
-  failedCount: 28,
-  successPercentage: 94,
-  failedPercentage: 6,
-  activeUsers: 12,
-  avgDaily: 65,
+  totalAccess: 0,
+  successCount: 0,
+  failedCount: 0,
+  successPercentage: 0,
+  failedPercentage: 0,
+  activeUsers: 0,
+  avgDaily: 0,
 })
 
 // Animated counters
@@ -230,36 +245,237 @@ const failedCountAnimated = useCountUp(computed(() => analyticsData.value.failed
 const activeUsersAnimated = useCountUp(computed(() => analyticsData.value.activeUsers), { duration: 900 })
 const successPercentageAnimated = useCountUp(computed(() => analyticsData.value.successPercentage), { duration: 900 })
 const failedPercentageAnimated = useCountUp(computed(() => analyticsData.value.failedPercentage), { duration: 900 })
-const avgDailyAnimated = useCountUp(computed(() => analyticsData.value.avgDaily), { duration: 900 })
+const avgDailyAnimated = useCountUp(computed(() => analyticsData.value.avgDaily), { duration: 900, decimals: 0 })
 
 const mounted = ref(false)
+
+// Removed range selector and debug toggle; analytics show all-time by default
+
+const sumDaily = computed(() => dailyUsage.value.reduce((s, d) => s + (d.value || 0), 0))
+const hasChartData = computed(() => sumDaily.value > 0 || (hourlyUsage.value && hourlyUsage.value.some(h => h.value > 0)))
+
 onMounted(() => {
   setTimeout(() => { mounted.value = true }, 60)
 })
 
+// Use shared parser to ensure consistent local-time parsing across the app
+// (see src/utils/parseLogTime.js)
+
+
+
+const formatDateTime = (d) => {
+  if (!d || isNaN(d)) return '—'
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const yyyy = d.getFullYear()
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mn = String(d.getMinutes()).padStart(2, '0')
+  const ss = String(d.getSeconds()).padStart(2, '0')
+  return `${dd}/${mm}/${yyyy} ${hh}:${mn}:${ss}`
+}
+
+// Compute analytics from `logs.value` and `users.value`
+// shared reactive datasets (initialized early so computeAnalytics can run immediately)
 const dailyUsage = ref([
-  { day: 'Senin', value: 78 },
-  { day: 'Selasa', value: 85 },
-  { day: 'Rabu', value: 92 },
-  { day: 'Kamis', value: 68 },
-  { day: 'Jumat', value: 95 },
-  { day: 'Sabtu', value: 45 },
-  { day: 'Minggu', value: 10 },
+  { day: 'Senin', value: 0 },
+  { day: 'Selasa', value: 0 },
+  { day: 'Rabu', value: 0 },
+  { day: 'Kamis', value: 0 },
+  { day: 'Jumat', value: 0 },
+  { day: 'Sabtu', value: 0 },
+  { day: 'Minggu', value: 0 },
 ])
+const hourlyUsage = ref(Array.from({ length: 24 }, (_, i) => ({ time: `${String(i).padStart(2,'0')}:00`, value: 0 })))
+const busyHours = ref([])
+const topUsers = ref([])
+const detailedStats = ref([])
+
+const dayNames = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu']
+
+function computeAnalytics() {
+  const all = (logs.value || []).slice()
+  const total = all.length
+  const success = all.filter(l => isSuccess(l.status)).length
+  const failed = total - success
+  // debug
+  console.debug('[Analytics] computeAnalytics start', { total, success, failed, logsCount: all.length })
+
+  // Choose a 7-day window. Prefer the last log date (last 7 days ending at last log),
+  // falling back to the current week if no logs exist.
+  // All-time window: use min/max of parsed log dates when available
+  const parsedDates = all.map(l => parseLogTime(l.time)).filter(d => !isNaN(d))
+  let windowStart, windowEnd
+  if (parsedDates.length > 0) {
+    const minDate = new Date(Math.min(...parsedDates.map(d => d.getTime())))
+    const maxDate = new Date(Math.max(...parsedDates.map(d => d.getTime())))
+    windowStart = new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate(), 0, 0, 0, 0)
+    windowEnd = new Date(maxDate.getFullYear(), maxDate.getMonth(), maxDate.getDate(), 23, 59, 59, 999)
+  } else {
+    const now = new Date()
+    windowEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23,59,59,999)
+    windowStart = new Date(windowEnd.getFullYear(), windowEnd.getMonth(), windowEnd.getDate() - 6, 0,0,0,0)
+  }
+
+  // Active users within chosen window
+  const uids = new Set()
+  for (const l of all) {
+    const d = parseLogTime(l.time)
+    if (!isNaN(d) && d >= windowStart && d <= windowEnd) uids.add(l.uid)
+  }
+
+  // Daily usage for the chosen 7-day window
+  let daily = []
+  for (let i = 0; i < 7; i++) {
+    const dt = new Date(windowStart.getFullYear(), windowStart.getMonth(), windowStart.getDate() + i)
+    const count = all.filter(l => {
+      const d = parseLogTime(l.time)
+      return !isNaN(d) && d >= new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 0,0,0,0) && d <= new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 23,59,59,999)
+    }).length
+    daily.push({ day: dayNames[dt.getDay()], value: count })
+  }
+
+  // using all-time window
+
+  // Hourly usage aggregated across the week (Mon-Sun)
+  const weekStart = windowStart
+  const weekEnd = windowEnd
+  let hourBuckets = Array.from({ length: 24 }, (_, h) => ({ time: `${String(h).padStart(2,'0')}:00`, value: 0 }))
+  for (const l of all) {
+    const d = parseLogTime(l.time)
+    if (isNaN(d)) continue
+    if (d >= weekStart && d <= weekEnd) {
+      hourBuckets[d.getHours()].value++
+    }
+  }
+
+  const parsedCount = all.reduce((acc, l) => !isNaN(parseLogTime(l.time)) ? acc + 1 : acc, 0)
+  const inWeekCount = all.reduce((acc, l) => {
+    const d = parseLogTime(l.time)
+    return (!isNaN(d) && d >= weekStart && d <= weekEnd) ? acc + 1 : acc
+  }, 0)
+
+
+  const sumDaily = daily.reduce((s, d) => s + d.value, 0)
+  if (sumDaily === 0 && total > 0) {
+    // fallback: use last 7 days ending at last log date and aggregate hourly across that week
+    const lastDates = all.map(l => parseLogTime(l.time)).filter(d => !isNaN(d))
+    const lastDate = new Date(Math.max(...lastDates.map(d => d.getTime())))
+    const lastDayStart = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate())
+    daily = []
+    for (let i = 6; i >= 0; i--) {
+      const dt = new Date(lastDayStart.getFullYear(), lastDayStart.getMonth(), lastDayStart.getDate() - i)
+      const count = all.filter(l => {
+        const d = parseLogTime(l.time)
+        return !isNaN(d) && d.getFullYear() === dt.getFullYear() && d.getMonth() === dt.getMonth() && d.getDate() === dt.getDate()
+      }).length
+      daily.push({ day: dayNames[dt.getDay()], value: count })
+    }
+    // rebuild week hourBuckets for last 7 days ending at lastDayStart
+    const newWeekStart = new Date(lastDayStart.getFullYear(), lastDayStart.getMonth(), lastDayStart.getDate() - 6)
+    const newWeekEnd = new Date(lastDayStart.getFullYear(), lastDayStart.getMonth(), lastDayStart.getDate(), 23, 59, 59, 999)
+    const hb = Array.from({ length: 24 }, (_, h) => ({ time: `${String(h).padStart(2,'0')}:00`, value: 0 }))
+    for (const l of all) {
+      const d = parseLogTime(l.time)
+      if (isNaN(d)) continue
+      if (d >= newWeekStart && d <= newWeekEnd) hb[d.getHours()].value++
+    }
+    for (let i = 0; i < 24; i++) hourBuckets[i].value = hb[i].value
+    const parsedCountFallback = all.reduce((acc, l) => !isNaN(parseLogTime(l.time)) ? acc + 1 : acc, 0)
+    const inFallbackWeek = all.reduce((acc, l) => { const d = parseLogTime(l.time); return (!isNaN(d) && d >= newWeekStart && d <= newWeekEnd) ? acc + 1 : acc }, 0)
+    // fallback: used last 7 days ending at last log date
+  }
+
+  // Busy hours (top 6 by count) with 2-hour ranges
+  const hourlyCounts = hourBuckets.map((h, i) => ({ time: `${String(i).padStart(2,'0')}:00 - ${String((i+2)%24).padStart(2,'0')}:00`, count: h.value }))
+  hourlyCounts.sort((a,b) => b.count - a.count)
+  const busy = hourlyCounts.slice(0,6)
+
+  // Top users by total accesses
+  const countsByUser = {}
+  for (const l of all) countsByUser[l.uid] = (countsByUser[l.uid] || 0) + 1
+  const usersList = (users.value || [])
+  const top = Object.keys(countsByUser).map(uid => ({ uid, count: countsByUser[uid], name: (usersList.find(u=>u.uid===uid)||{}).name || uid }))
+    .sort((a,b) => b.count - a.count)
+    .slice(0,6)
+
+  // Detailed stats per user (limit to users list)
+  const detailed = (usersList || []).map(u => {
+    const uid = u.uid
+    const userLogs = all.filter(l => l.uid === uid).slice()
+    userLogs.sort((a,b) => parseLogTime(b.time) - parseLogTime(a.time))
+    const totalU = userLogs.length
+    const succ = userLogs.filter(l => isSuccess(l.status)).length
+    const fail = totalU - succ
+    const rate = totalU ? Math.round((succ/totalU)*100) : 0
+    return {
+      uid,
+      name: u.name || uid,
+      total: totalU,
+      success: succ,
+      failed: fail,
+      successRate: rate,
+      lastAccess: userLogs[0] ? formatDateTime(parseLogTime(userLogs[0].time)) : '—'
+    }
+  }).sort((a,b) => b.total - a.total)
+
+  // average per day across the window (all-time window)
+  let avgDaily = 0
+  if (parsedDates.length) {
+    const minD = new Date(Math.min(...parsedDates.map(d => d.getTime())))
+    const maxD = new Date(Math.max(...parsedDates.map(d => d.getTime())))
+    const days = Math.max(1, Math.round((maxD - minD) / (24 * 3600 * 1000)) + 1)
+    avgDaily = Math.round(total / days)
+  }
+
+  // Assign to reactive refs
+  analyticsData.value.totalAccess = total
+  analyticsData.value.successCount = success
+  analyticsData.value.failedCount = failed
+  analyticsData.value.successPercentage = total ? Math.round((success/total)*100) : 0
+  analyticsData.value.failedPercentage = total ? 100 - analyticsData.value.successPercentage : 0
+  analyticsData.value.activeUsers = uids.size
+  analyticsData.value.avgDaily = avgDaily
+
+  dailyUsage.value = daily
+  hourlyUsage.value = hourBuckets
+  busyHours.value = busy
+  topUsers.value = top
+  detailedStats.value = detailed
+}
+
+// Recompute when logs or users change
+watch([logs, users], () => {
+  try {
+    computeAnalytics()
+  } catch (e) {
+    console.error('computeAnalytics failed', e)
+  }
+}, { immediate: true })
+
+onMounted(async () => {
+  await fetchUsers()
+  // fetch all logs (no limit)
+  await fetchLogs({ limit: null, sortBy: 'newest' })
+  subscribeLogs()
+  // ensure mounted animations
+  setTimeout(() => { mounted.value = true }, 60)
+})
+
+
+
+onBeforeUnmount(() => {
+  try { unsubscribeLogs() } catch (e) {}
+})
+
+
 const maxDaily = computed(() => Math.max(...dailyUsage.value.map(d => d.value), 1))
 
 const barScale = (val) => {
   return (val / maxDaily.value) * 100
 }
-const hourlyUsage = ref([
-  { time: '00:00', value: 2 },
-  { time: '04:00', value: 1 },
-  { time: '08:00', value: 8 },
-  { time: '12:00', value: 12 },
-  { time: '16:00', value: 15 },
-  { time: '20:00', value: 18 },
-  { time: '23:00', value: 10 },
-])
+
+const busyMax = computed(() => busyHours.value && busyHours.value.length ? Math.max(...busyHours.value.map(h => h.count), 1) : 1)
+
 
 const avgHourlyAccess = computed(() => {
   return Math.round(hourlyUsage.value.reduce((sum, h) => sum + h.value, 0) / hourlyUsage.value.length)
@@ -306,29 +522,15 @@ const areaPoints = computed(() => {
   return `${pts} ${right},${bottom} ${left},${bottom}`
 })
 
-const busyHours = ref([
-  { time: '07:00 - 09:00', count: 35 },
-  { time: '09:00 - 11:00', count: 28 },
-  { time: '11:00 - 13:00', count: 22 },
-  { time: '13:00 - 15:00', count: 18 },
-  { time: '15:00 - 17:00', count: 31 },
-  { time: '17:00 - 19:00', count: 25 },
-])
+watch(logs, () => {
+  console.log(
+    'parsed date test:',
+    logs.value.slice(0,3).map(l => parseLogTime(l))
+  )
+})
+watch(logs, () => {
+  console.log('RAW LOG SAMPLE:', logs.value[0])
+}, { immediate: true })
 
-const topUsers = ref([
-  { uid: 'user011', name: 'Budi Doremi', count: 75 },
-  { uid: 'user002', name: 'Siti Nurhaliza', count: 54 },
-  { uid: 'user004', name: 'Dewi Lestari', count: 48 },
-  { uid: 'user005', name: 'Ahmad Rizaldi', count: 42 },
-  { uid: 'user006', name: 'Ratna Wijaya', count: 38 },
-])
 
-const detailedStats = ref([
-  { uid: 'user001', name: 'Budi Santoso', total: 65, success: 61, failed: 4, successRate: 94, lastAccess: '12/11/2025 14:35' },
-  { uid: 'user002', name: 'Siti Nurhaliza', total: 54, success: 52, failed: 2, successRate: 96, lastAccess: '12/11/2025 14:28' },
-  { uid: 'user003', name: 'Rinto Harahap', total: 42, success: 38, failed: 4, successRate: 90, lastAccess: '12/11/2025 14:15' },
-  { uid: 'user004', name: 'Dewi Lestari', total: 48, success: 46, failed: 2, successRate: 96, lastAccess: '12/11/2025 13:52' },
-  { uid: 'user005', name: 'Ahmad Rizaldi', total: 42, success: 40, failed: 2, successRate: 95, lastAccess: '12/10/2025 16:45' },
-  { uid: 'user006', name: 'Ratna Wijaya', total: 38, success: 36, failed: 2, successRate: 95, lastAccess: '12/10/2025 15:30' },
-])
 </script>
